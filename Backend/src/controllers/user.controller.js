@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const userModel = require("../models/user.models.js");
+const blackListedTokenModel = require("../models/blackListedToken.models.js");
 
 async function registerUser(req, res) {
   const { username, email, password } = req.body;
@@ -109,4 +110,46 @@ async function loginUser(req, res) {
   }
 }
 
-module.exports = { registerUser, loginUser };
+async function logoutUser(req, res) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        message: "Unauthorized access",
+        success: false,
+      });
+    }
+    const { token } = req.cookies;
+    await blackListedTokenModel.create({
+      token,
+    });
+
+    res.clearCookie("token");
+    return res.status(200).json({
+      message: "You are logged out",
+      success: true,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Internel server error",
+      success: false,
+    });
+  }
+}
+
+async function getUserData(req,res) {
+  try {
+    return res.status(200).json({
+      user: req.user,
+      success: true
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Internel server error",
+      success: false 
+    });
+  }
+}
+
+module.exports = { registerUser, loginUser, logoutUser, getUserData };
