@@ -137,17 +137,17 @@ async function logoutUser(req, res) {
   }
 }
 
-async function getUserData(req,res) {
+async function getUserData(req, res) {
   try {
     return res.status(200).json({
       user: req.user,
-      success: true
+      success: true,
     });
   } catch (error) {
     console.error(error);
     return res.status(500).json({
       message: "Internel server error",
-      success: false 
+      success: false,
     });
   }
 }
