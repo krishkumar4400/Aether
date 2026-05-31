@@ -1,0 +1,57 @@
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const userModel = require("../models/user.models.js");
+
+async function registerUser(req, res) {
+  const { username, email, password } = req.body;
+
+  try {
+    if (!username || !email || !password) {
+      return res.status(400).json({
+        message: "Missing details",
+        success: false,
+      });
+    }
+
+    let user = await userModel.findOne({
+      $or: [{ username }, { email }],
+    });
+
+    if (user) {
+      return res.status(409).json({
+        message: "User with this username or email already exists",
+        success: false,
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    user = await userModel.create({
+      email,
+      username,
+      password: hashedPassword,
+    });
+
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRY_TIME,
+    });
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    });
+
+    return res.status(201).json({
+      message: "User registered successfully",
+      success: true,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Internal server error",
+      success: false,
+    });
+  }
+}
+
+module.exports = { registerUser };
