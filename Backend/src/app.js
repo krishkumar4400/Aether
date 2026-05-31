@@ -2,6 +2,7 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const userRouter = require("./routes/user.routes.js");
+const healthCheckRouter = require("./routes/healthCheck.routes.js");
 
 const app = express();
 
@@ -17,5 +18,6 @@ const logs = () => {
 };
 
 app.use("/api/user", userRouter);
+app.use("/api/server", healthCheckRouter);
 
 module.exports = app;
