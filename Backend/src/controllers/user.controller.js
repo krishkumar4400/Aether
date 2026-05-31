@@ -2,17 +2,20 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const userModel = require("../models/user.models.js");
 const blackListedTokenModel = require("../models/blackListedToken.models.js");
+const {validationResult} = require('express-validator');
 
 async function registerUser(req, res) {
+  const errors = validationResult(req);
+  if(!errors.isEmpty) {
+    return res.status(400).json({
+      error: errors.array(),
+      success: false
+    })
+  }
+
   const { username, email, password } = req.body;
 
   try {
-    if (!username || !email || !password) {
-      return res.status(400).json({
-        message: "Missing details",
-        success: false,
-      });
-    }
 
     let user = await userModel.findOne({
       $or: [{ username }, { email }],
@@ -56,15 +59,16 @@ async function registerUser(req, res) {
 }
 
 async function loginUser(req, res) {
-  const { email, password } = req.body;
-
-  try {
-    if (!email || !password) {
+    const errors = validationResult(req);
+    if (!errors.isEmpty) {
       return res.status(400).json({
-        message: "Missing details",
+        error: errors.array(),
         success: false,
       });
     }
+  const { email, password } = req.body;
+
+  try {
 
     const user = await userModel
       .findOne({
